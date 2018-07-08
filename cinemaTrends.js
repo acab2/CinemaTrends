@@ -1,20 +1,32 @@
 
-/* TO DO LIST
-	tentar corrigir o plot no grafo que esta repetindo
-
+/* 	Developed by César Bulhões
+	Github: https://github.com/acab2/CinemaTrends
 */
-
+	
+	
+	//Margin values
 	var margin = {top: 50, right: 100, bottom: 50, left: 100}
 	  , width = 800 - margin.left - margin.right // Use the window's width 
 	  , height = 550 - margin.top - margin.bottom; // Use the window's height
 	   
+	//Adding SVGs
 	var svg = d3.select("body").append("svg")
 		.attr("width", width + margin.left + margin.right)
 		.attr("height", height + margin.top + margin.bottom)
 		.append("g")
 		.attr("transform", "translate(" + margin.left + "," + margin.top + " )");
+	
+	var svg2 = d3.select("body").append("svg")
+		.attr("width", width + margin.left + margin.right)
+		.attr("height", height + margin.top + margin.bottom)
+		.append("g")
+		.attr("transform", "translate(" + margin.left + "," + margin.top + " )");	
+	
+	//Adding title
 	svg.append("text").text("Cinema Trends Since 1950").attr("x", -100). attr("y", -10).attr("font-size", 20).attr("fill", "#756bb1");
-
+	
+	
+	//Adding borders
 	var borderPath = svg.append("rect")
        			.attr("x", 0)
        			.attr("y", 0)
@@ -42,32 +54,43 @@
        			.style("fill", "none")
        			.style("stroke-width", 1);
 	
+	//Declaring tooltips
 	var tooltip = d3.select("body").append("div").attr("class", "toolTip");
+	var tooltipCast = d3.select("body").append("div").attr("class", "toolTip")
+				.style("left", 10  + "px")
+				.style("top", 585 + "px")
+				.style("display", "inline-block");
 	
+	//Adding tooltip showing cast from selected node
+	svg2.append("text").text("Cast").attr("x", -100). attr("y", -30).attr("font-size", 20).attr("fill", "#756bb1");
+
+	//Setting color scale
 	var color = d3.scaleOrdinal()
 				.domain([1,2,3,4,5,6,7,8,9,10,11])
 				.range(["black", "#800026", "#bd0026", "#e31a1c", 
 				"#fc4e2a", "#fd8d3c", "#feb24c", "#fed976", 
 				"#ffeda0", "#ffffcc", "gray"]);
-		
+	
+	//Declaring global variables	
 	start = 0;
-	var simulation = d3.forceSimulation()
+	var simulation	= d3.forceSimulation()
     .force("link", d3.forceLink().id(function(d) { return d.id; }))
     .force("charge", d3.forceManyBody())
     .force("center", d3.forceCenter(width / 2, height / 2));
+	
 	var node, link;
 	var data = [];
 	var movies;
+	var quantityPerGenre = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
 	
-	//var director = "";
-	//var cast = [];
-	var splitted = [];
-	var resultado = [];
-	var gen = "";
-	var genres = [];
-	var allData;
-	var allMovies;
-	var movieID;
+	//Categorie list
+	var allCategories = ["Action","Adventure","Animation","Comedy",
+					"Crime","Documentary","Drama","Family",
+					"Fantasy","Foreign","History","Horror",
+					"Music","Mystery","Romance","Science Fiction",
+					"TV Movie","Thriller","War","Western"];
+	
+	//Array that sets if a genre is visible
 	var categories = [	{"name": "Action","visible": false},
 					{"name": "Adventure","visible": false},
 					{"name": "Animation","visible": false},
@@ -88,24 +111,21 @@
 					{"name": "Thriller","visible": false},
 					{"name": "War","visible": false},
 					{"name": "Western","visible": false}];
-
-	var test;
+	
+	//Inicial bush position
 	var minDate = 2016, maxDate = 2017;
+	//Global graph
 	var graphy = [];
-	var links = [];
-	var nodes = d3.set();
-	var actors = [];
-	var actors2 = [];
-	var rNodes = "", rLinks = "";
 	var auxNodes = [], auxLinks = [], auxGraph = [];
 	
-	
+	//Function that converts data to nodes and links format
+	// returns [links{source,target,value}, nodes{budget,cast,companies,director,genres,group,id,movie_id,popularity,release_date,revenue}]
 	function createNodesAndLinks(dataAux, nodesAux, linksAux, graphAux){
 		nodesAux = [], linksAux = [], graphAux =[];
 		var j, k,l, value, indiceLink = 0, movieNodes = [], sucesso = 0, grupo = 1;
 		for(i = 0; i < dataAux.length; i++){
-			//Calculating group comparing revenue and budget
 			
+			//Calculating group comparing revenue and budget
 			if(dataAux[i].budget == 0){
 				grupo = 11;
 			}else if(dataAux[i].revenue >= 25*dataAux[i].budget){
@@ -130,8 +150,51 @@
 				grupo = 1;
 			}
 			
+			//Calculates quantityPerGenre displayed on the graph
 			var j, genresAux = "";
 			for(j = 0; j < dataAux[i].genres.length; j++){
+				if(dataAux[i].genres[j] == "Action"){
+					quantityPerGenre[0]++;
+				}else if(dataAux[i].genres[j] == "Adventure"){
+					quantityPerGenre[1]++;
+				}else if(dataAux[i].genres[j] == "Animation"){
+					quantityPerGenre[2]++;
+				}else if(dataAux[i].genres[j] == "Comedy"){
+					quantityPerGenre[3]++;
+				}else if(dataAux[i].genres[j] == "Crime"){
+					quantityPerGenre[4]++;
+				}else if(dataAux[i].genres[j] == "Documentary"){
+					quantityPerGenre[5]++;
+				}else if(dataAux[i].genres[j] == "Drama"){
+					quantityPerGenre[6]++;
+				}else if(dataAux[i].genres[j] == "Family"){
+					quantityPerGenre[7]++;
+				}else if(dataAux[i].genres[j] == "Fantasy"){
+					quantityPerGenre[8]++;
+				}else if(dataAux[i].genres[j] == "Foreign"){
+					quantityPerGenre[9]++;
+				}else if(dataAux[i].genres[j] == "History"){
+					quantityPerGenre[10]++;
+				}else if(dataAux[i].genres[j] == "Horror"){
+					quantityPerGenre[11]++;
+				}else if(dataAux[i].genres[j] == "Music"){
+					quantityPerGenre[12]++;
+				}else if(dataAux[i].genres[j] == "Mystery"){
+					quantityPerGenre[13]++;
+				}else if(dataAux[i].genres[j] == "Romance"){
+					quantityPerGenre[14]++;
+				}else if(dataAux[i].genres[j] == "Science Fiction"){
+					quantityPerGenre[15]++;
+				}else if(dataAux[i].genres[j] == "TV Movie"){
+					quantityPerGenre[16]++;
+				}else if(dataAux[i].genres[j] == "Thriller"){
+					quantityPerGenre[17]++;
+				}else if(dataAux[i].genres[j] == "War"){
+					quantityPerGenre[18]++;
+				}else if(dataAux[i].genres[j] == "Western"){
+					quantityPerGenre[19]++;
+				}
+				
 				if(j+1 == dataAux[i].genres.length){
 					genresAux = genresAux + dataAux[i].genres[j];
 				}else{
@@ -139,7 +202,8 @@
 				}
 			}
 			
-			var companiesAux = ""
+			//Treats the string turning into an array
+			var companiesAux = "";
 			for(j = 0; j < dataAux[i].production_companies.length; j++){
 				if(j+1 == dataAux[i].production_companies.length){
 					companiesAux = companiesAux + dataAux[i].production_companies[j];
@@ -147,14 +211,23 @@
 					companiesAux = companiesAux + dataAux[i].production_companies[j] + " | ";
 				}
 			}
+			var castAux = "";
+			for(j = 0; j < dataAux[i].cast.length; j++){
+				if(j+1 == dataAux[i].cast.length){
+					castAux = castAux + dataAux[i].cast[j].name;
+				}else{
+					castAux = castAux + dataAux[i].cast[j].name + "";
+				}
+				
+			}
 			
-			
-			// Set information to Nodes
+			//Set information to Nodes
 			nodesAux.push({"id": dataAux[i].title, "group": grupo, "movie_id": dataAux[i].id,
 						"budget": dataAux[i].budget, "revenue": dataAux[i].revenue, 
 						"director": dataAux[i].director, "genres": genresAux, "release_date": dataAux[i].release_date, 
-						"popularity": dataAux[i].popularity, "companies": companiesAux});
+						"popularity": dataAux[i].popularity, "companies": companiesAux, "cast": castAux});
 			
+			//calculates the cast similarity between nodes and set the information to the links
 			for(j = i+1; j < dataAux.length-1; j++){
 				value = 0;
 				for(k = 0; k < dataAux[i].cast.length; k++){
@@ -169,33 +242,31 @@
 					var target = {"id": dataAux[j].title, "group": 1, "index": indiceLink}
 					linksAux.push({"source": dataAux[i].title,"target": dataAux[j].title, "value": value});
 					indiceLink++;
-					
-					
-					
 				}
 			}
 		}
 		
-		graphAux.push({"nodes": nodesAux, "links": linksAux}); //USAR GRAPH[0]
+		//Put it all in an unique array [nodes,links]
+		graphAux.push({"nodes": nodesAux, "links": linksAux});
 		
 		graphAux = graphAux[0];
 	return graphAux;
 		
 	}
 	
+	//Function that converts the data to a CSV String and parses it to the right data format
 	function convertToGraph(aux){
-		var i, aNodes = [], aLinks = [];
+		var i, aNodes = [], aLinks = [], rLinks = [], rNodes = [];
 		for(i = 0; i < aux.nodes.length; i++){
-			
 			if(i+1 == aux.nodes.length){
-				rNodes = rNodes + aux.nodes[i].id + "," + aux.nodes[i].group + "," + aux.nodes[i].budget + "," + aux.nodes[i].revenue + "," + aux.nodes[i].director + "," +  aux.nodes[i].genres + "," + aux.nodes[i].release_date + "," + aux.nodes[i].popularity + "," + aux.nodes[i].companies; 
+				rNodes = rNodes + aux.nodes[i].id + "," + aux.nodes[i].group + "," + aux.nodes[i].budget + "," + aux.nodes[i].revenue + "," + aux.nodes[i].director + "," +  aux.nodes[i].genres + "," + aux.nodes[i].release_date + "," + aux.nodes[i].popularity + "," + aux.nodes[i].companies + "," + aux.nodes[i].cast; 
 			}else{
-				rNodes = rNodes + aux.nodes[i].id + "," + aux.nodes[i].group + "," + aux.nodes[i].budget + "," + aux.nodes[i].revenue + "," + aux.nodes[i].director + "," +  aux.nodes[i].genres + "," + aux.nodes[i].release_date + "," + aux.nodes[i].popularity + "," + aux.nodes[i].companies + "\n";
+				rNodes = rNodes + aux.nodes[i].id + "," + aux.nodes[i].group + "," + aux.nodes[i].budget + "," + aux.nodes[i].revenue + "," + aux.nodes[i].director + "," +  aux.nodes[i].genres + "," + aux.nodes[i].release_date + "," + aux.nodes[i].popularity + "," + aux.nodes[i].companies + "," + aux.nodes[i].cast + "\n";
 			}
 		}
-		//Add Director here
-		aNodes = d3.csvParse("id,group,budget,revenue,director,genres,release_date,popularity,companies\n" + rNodes);
-		rNodes = [];
+		
+		aNodes = d3.csvParse("id,group,budget,revenue,director,genres,release_date,popularity,companies,cast\n" + rNodes);
+		
 		for(i = 0; i < aux.links.length; i++){
 			
 			if(i+1 == aux.links.length){
@@ -205,11 +276,13 @@
 			}
 		}
 		aLinks = d3.csvParse("source,target,value\n" + rLinks);
-		rLinks = [];
+		
 		graphAux = [];
+		
 		  return {"nodes": aNodes,"links": aLinks};
 	}
 	
+	//Function that gets data in a period of years
 	function getPeriod(yearMin, yearMax){
 		var i,j,k;
 		var result = [], counter = 0;
@@ -236,47 +309,55 @@
 		return result;
 	}
 	
+	//Function that updates all views
 	function click(min, max){
+		quantityPerGenre = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 		graphy = convertToGraph(createNodesAndLinks(getPeriod(min,max), auxNodes, auxLinks, auxGraph))
-		
 		updateGraph();
+		updateBarChart();
 	}
 	
+	//Plotting graph and simulation
+	var linkGroup = svg.append("g").attr("class", "links");
+	var linkElements = linkGroup.selectAll("line")
+		.data(graphy.links);
+	var nodeGroup = svg.append("g").attr("class", "nodes");
+	var nodeElements = nodeGroup.selectAll("nodes")
+		.data(graphy.nodes);	
+	
 	function updateGraph(){
-		svg.append("rect")
-       			.attr("x", 0)
-       			.attr("y", 0)
-       			.attr("height", height)
-       			.attr("width", width)
-       			.style("stroke", "black")
-       			.style("fill", "black")
-       			.style("stroke-width", 1);
-				
-		var linkGroup = svg.append("g").attr("class", "links");
 		
-		var linkElements = linkGroup.selectAll("line")
+
+		linkElements = linkGroup.selectAll("line")
 		.data(graphy.links);
 		
-		linkElements.exit().remove();
-		
-		var linkEnter = linkElements.enter().append("line")
-		.attr("stroke-width", function(d) { return Math.sqrt(d.value); });
-		
-		linkElements = linkEnter.merge(linkElements);
-		
-		var nodeGroup = svg.append("g").attr("class", "nodes");
-		
-		var nodeElements = nodeGroup.selectAll("nodes")
+		nodeElements = nodeGroup.selectAll("circle")
 		.data(graphy.nodes);
 		
-		nodeElements.exit().remove();
+		linkElements.exit().transition()
+				  .attr("stroke-opacity", 0)
+				  .attrTween("x1", function(d) { return function() { return d.source.x; }; })
+				  .attrTween("x2", function(d) { return function() { return d.target.x; }; })
+				  .attrTween("y1", function(d) { return function() { return d.source.y; }; })
+				  .attrTween("y2", function(d) { return function() { return d.target.y; }; })
+				  .remove();
+		
+		nodeElements.exit().transition()
+					  .attr("r", 0)
+					  .remove();
+		
+		var linkEnter = linkElements.enter().append("line")
+		.call(function(linkElements) { linkElements.transition().attr("stroke-opacity", 1); 
+								   linkElements.transition().attr("stroke-width", function(d) { return Math.sqrt(d.value); });});
+				
 		var nodeEnter = nodeElements.enter().append("circle")
-		  .attr("r", 5)
 		  .attr("fill", function(d) { return color(d.group); })
-		  .call(d3.drag()
-			  .on("start", dragstarted)
-			  .on("drag", dragged)
-			  .on("end", dragended))
+		  .call(function(nodeElements) { nodeElements.transition().attr("r", 5);})
+		  .call(d3.drag().on("start", dragstarted)
+											  .on("drag", dragged)
+											  .on("end", dragended))
+											  
+		//Event that shows the movie information moving the mouse over a node
 		.on("mouseover", function(d) {
 		  tooltip
               .style("left", d3.event.pageX + 5 + "px")
@@ -292,7 +373,12 @@
 			  + "Companies: " + d.companies);
        })
 		.on("mouseout", function(d){ tooltip.style("display", "none");})
-		.on("click", function(d){ console.log(d);});
+		
+		//Event that shows the cast information from a selected node
+		.on("click", function(d){ tooltipCast
+									.html((d.cast.replace(/\"/g, "<br>")));});
+		
+		linkElements = linkEnter.merge(linkElements);
 		
 		nodeElements = nodeEnter.merge(nodeElements);
 
@@ -305,6 +391,7 @@
 
 		simulation.restart();
 		
+		//Functions to turn possible the moviments of nodes and links displayed in graph
 		function ticked() {
 			
 			linkElements
@@ -355,7 +442,7 @@
 		}
 	}
 	
-	
+	//Getting and fixing original data from movies from https://www.kaggle.com/tmdb/tmdb-movie-metadata
 	if(start == 0){
 		start = 1;
 		d3.csv("http://localhost:8000/tmdb_5000_movies.csv", function(error2, dataset2) {
@@ -511,6 +598,7 @@
 				movies[4801].production_companies = ""; 
 		});
 		
+		//Getting and treating original data from cast and crew from https://www.kaggle.com/tmdb/tmdb-movie-metadata
 		d3.csv("http://localhost:8000/tmdb_5000_credits.csv", function(error, dataset) {
 			if (error) throw error;
 				
@@ -523,14 +611,14 @@
 					
 					aux = aux.split("}, {");
 					
-					
 					var n;
-					resultado = [];
+					result = [];
+					//Treating cast information
 					for(n = 0; n < aux.length; n++){
 						splitted = aux[n].split(", \"");
 						
 						if(splitted != ""){
-							resultado.push({cast_id: splitted[0].substr(splitted[0].indexOf(":")+1, splitted[0].length).trim(), 
+							result.push({cast_id: splitted[0].substr(splitted[0].indexOf(":")+1, splitted[0].length).trim(), 
 									character: splitted[1].substr(splitted[1].indexOf(":")+3, splitted[1].length-14).trim(), 
 									credit_id: splitted[2].substr(splitted[2].indexOf(":")+1, splitted[2].length).trim(), 
 									gender: splitted[3].substr(splitted[3].indexOf(":")+1, splitted[3].length).trim(), 
@@ -539,42 +627,36 @@
 									order: splitted[6].substr(splitted[6].indexOf(":")+1, splitted[6].length).trim()
 									});
 						}else{
-							resultado.push({});
+							result.push({});
 						}
 					}
 					
 					
 				
-				
+				//Getting director from crew data
 				director = dataset[i].crew.slice(dataset[i].crew.indexOf("\"Director\", \"name\": \""), dataset[0].crew.length-2);
 				director = director.slice(director.indexOf("\"name\": \"") +9, director.indexOf("\"}, {\"credit_id\""));
 				
 				var j;
 				var genre = movies[i].genres.slice(movies[i].genres.indexOf("\"name\": \""), movies[i].genres.length);
 				genres = [];
+				//Treating genre information
 				for(j = 0; j < movies[i].genres.match(/"name\": "/g).length; j++){
 					genre = genre.slice(genre.indexOf("\"name\": \"") +9, movies[i].genres.length);
 					genres.push(genre.slice(0, genre.indexOf("\"}")));
 					
 				}
+				
+				//Treating companies information
 				if(movies[i].production_companies == ""){
 					companies.push("Not Registered");
 					
 				}else{
-					if(i == 0){
-						console.log(movies[i].production_companies);
-					}
-					var company = movies[i].production_companies.slice(movies[i].production_companies.indexOf("\"name\": \""), movies[i].production_companies.length);
 					
-					if(i == 0){
-						console.log(company);
-					}
+					var company = movies[i].production_companies.slice(movies[i].production_companies.indexOf("\"name\": \""), movies[i].production_companies.length);
 					
 					var companies = [];
 					for(j = 0; j < movies[i].production_companies.match(/"name\": "/g).length; j++){
-						if(i == 0){
-						console.log(company);
-						}
 						
 						companies.push(company.slice(company.indexOf("\"name\": \"") +9, company.indexOf("\", \"id\"")));
 						company = company.slice(company.indexOf("\", \"id\"") +7, company.length);
@@ -582,8 +664,9 @@
 					}
 				}
 				
+				//Appending all information together
 				if(dataset[i].movie_id == movies[i].id){
-						data.push({movie_id: dataset[i].movie_id, title: dataset[i].title.replace(/,/g, ""), cast: resultado, director: director, 
+						data.push({movie_id: dataset[i].movie_id, title: dataset[i].title.replace(/,/g, ""), cast: result, director: director, 
 						budget: movies[i].budget, genres: genres, popularity: movies[i].popularity, runtime: movies[i].runtime,
 						revenue: movies[i].revenue, vote_average: movies[i].vote_average, vote_count: movies[i].vote_count,
 						release_date: movies[i].release_date.split("-")[0], production_companies: companies});
@@ -595,8 +678,8 @@
 	}
 
 graphy = {"nodes": [],"links": []};
-updateGraph();
 
+//Functions to make the simulation happens
 function dragstarted(d) {
   if (!d3.event.active) simulation.alphaTarget(0.3).restart();
   d.fx = d.x;
@@ -614,11 +697,10 @@ function dragended(d) {
   d.fy = null;
 }
 
+//Creating color legends of node colors
 var ext_color_domain = [11, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 var legend_labels = ["Not Registered", "< Budget", "> Budget+", "> 2*Budget+", "> 4*Budget+", "> 6*Budget+", 
 					"> 8*Budget+", "> 10*Budget+", "> 15*Budget+", "> 20*Budget+", "> 25*Budget+"]
-  
-  
   
 var legend = svg.selectAll("g.legend")
   .data(ext_color_domain)
@@ -660,7 +742,7 @@ svg.append("text")
   .attr("y", height -15)
   .text("between casts.");
   
-//Genre Selection Menu
+//Creating the genre Selection Menu
 
 	var colorLabel = "#756bb1";
 	var yScale = d3.scaleLinear().range([height-(margin.top+margin.bottom), 0]);
@@ -678,13 +760,12 @@ svg.append("text")
       .attr("class", "line")
       .style("pointer-events", "none") // Stop line interferring with cursor
       .attr("id", function(d) {
-        return "line-" + d.name;//.replace(" ", "").replace("/", ""); // Give line id of line-(insert issue name, with any spaces replaced with no spaces)
+        return "line-" + d.name;
       })
       
       .style("stroke", function(d) { return colorLabel; });
 
-  // draw legend
-  var legendSpace = 450 / categories.length; // 450/number of issues (ex. 40)    
+  var legendSpace = 450 / categories.length; // 450/number of issues    
 
   issue.append("rect")
       .attr("width", 10)
@@ -699,12 +780,11 @@ svg.append("text")
         d.visible = !d.visible; // If array key for this data selection is "visible" = true then make it false, if false then make it true
 		click(minDate, maxDate);
       })
-
+		//Makes the 
       .on("mouseover", function(d){
-
         d3.select(this)
           .transition()
-          .attr("fill", function(d) { return colorLabel; }); 
+          .attr("fill", function(d) { return "#cccbb1"; }); 
       })
       .on("mouseout", function(d){
         d3.select(this)
@@ -713,6 +793,7 @@ svg.append("text")
           return d.visible ? colorLabel : "#F1F1F2";});
 
       })
+	// Setting the labels of the genre menu
   var labels = d3.select("svg")
 		.append("g").attr("transform", "translate(" + 590 + "," + (margin.top ) + " )")
 		.selectAll(".labels")
@@ -724,14 +805,10 @@ svg.append("text")
       .attr("y", function (d, i) { return (legendSpace)+i*(legendSpace) - 10; })  // (return (11.25/2 =) 5.625) + i * (5.625) 
       .text(function(d) { return d.name; }); 
 
-	  //Time line
+	  //Creating Brush Selection to get a period of years
 	 var x = d3.scaleLinear()
         .domain([1950,2017])
         .range([0, width]);
-		
-		var xScale = d3.scaleTime()
-  .domain([new Date("1916-01-01"), new Date("2017-30-12")])
-  .range([0, 450]);
 		
 	  var brush = d3.brushX()
         .extent([[0,0], [width,20]])
@@ -759,13 +836,93 @@ svg.append("text")
 	  
     }
 	brush.move(brushg, [2000, 2010].map(x));
+	
+	//Creating Bar Chart 
+	var height2 = 300;
+	var bar = svg2.selectAll(".bar");
 	  
-	  
-	  
-	  
-	  
-	  
-	  
-	  
-	  
+	var xScale = d3.scaleBand()
+			  .range([0, width])
+			  .padding(0.1)
+			  .domain(allCategories.map(function(d) { return d; }));
+
+	var xAxisBar = svg2.append("g").attr("transform", "translate("+ 80 +"," + (height2-20) + ")")
+      .call(d3.axisBottom(xScale)).selectAll("text").attr("transform", " rotate(45)")
+		.attr("y", 5)
+		.attr("x", 5)
+		.attr("dy", ".35em")
+		.style("text-anchor", "start");
+	
+	//Function that updates Bar Chart graph and yAxis
+function updateBarChart(){
+	
+	const WIDTH = 400;
+	const HEIGHT = 200;
+	const INNER_HEIGHT = HEIGHT - 20;
+	const BAR_WIDTH = 24;
+	const BAR_GAP = 2;
+	
+	xScale = d3.scaleBand()
+			  .range([0, width])
+			  .padding(0.1)
+			  .domain(allCategories.map(function(d) { return d; }));
+			
+    var y = d3.scaleLinear().range([300, 0]).domain([0, d3.max(quantityPerGenre, function(d) { return d; })]);
+    var yAxisCall = d3.axisLeft().scale(y) ;
+     
+	
+  //append the rectangles to the bar chart
+  bar = svg2.selectAll(".bar")
+    .data(quantityPerGenre, d => d);
+	
+	//Makes old bars to desapear
+  bar.exit().transition().style('opacity', 0).remove();
+	 
+	 //Making old bars to desapear
+	  bar = bar.select("rect")
+    .call(function(d){bar.transition().attr("height", function(d) { return height - y(d); })})
+	  .merge(bar);  										
+   
+  //Creating new bars and appending them
+  bar.data(quantityPerGenre, d => d)
+        .enter().append("rect").attr("transform", "translate("+ 80 +"," + (-20) + ")")
+		 
+		 //Showing tooltip with quantity information
+		 .on("mouseover", function(d) {
+		  tooltip
+              .style("left", d3.event.pageX + (-110) + "px")
+              .style("top", d3.event.pageY + (-41) + "px")
+              .style("display", "inline-block")
+              .html((d));
+       })
+		.on("mouseout", function(d){ tooltip.style("display", "none");})
+          .attr("class", "bar")
+		  .attr('y', height2) //Inicialize the y to show effect of growing bars after merging them
+		  .attr("x", 
+			  function(d,i) {
+				if(i == 0){return xScale("Action");}else 		if(i == 1){return xScale("Adventure");}else
+				if(i == 2){return xScale("Animation");}else 	if(i == 3){return xScale("Comedy");}else
+				if(i == 4){return xScale("Crime");}else 		if(i == 5){return xScale("Documentary");}else
+				if(i == 6){return xScale("Drama");}else 		if(i == 7){return xScale("Family");}else
+				if(i == 8){return xScale("Fantasy");}else 	if(i == 9){return xScale("Foreign");}else
+				if(i == 10){return xScale("History");}else 	if(i == 11){return xScale("Horror");}else
+				if(i == 12){return xScale("Music");}else 		if(i == 13){return xScale("Mystery");}else
+				if(i == 14){return xScale("Romance");}else 	if(i == 15){return xScale("Science Fiction");}else
+				if(i == 16){return xScale("TV Movie");}else 	if(i == 17){return xScale("Thriller");}else
+				if(i == 18){return xScale("War");}else 		if(i == 19){return xScale("Western");} })
+		  .merge(bar)
+		  .transition()
+          .attr("width", xScale.bandwidth())
+          .attr("y", function(d) { return y(d); })
+          .attr("height", function(d) { return 300 - y(d); }); //<- Shows message error, but still works. Stops if replaced by the constant 300, ps: height2 = 300
+  
+  //Updating yAxis range
+	var yAxisBar	= svg2.selectAll(".y")
+            .data(["dummy"]);
+            
+        var newY = yAxisBar.enter().append("g").attr("transform", "translate("+ 80 +"," + (-20) + ")")
+            .attr("class", "y axis");
+
+        yAxisBar.merge(newY).transition().call(yAxisCall);		
+}
 	
