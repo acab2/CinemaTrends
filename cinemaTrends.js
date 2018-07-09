@@ -277,8 +277,6 @@
 		}
 		aLinks = d3.csvParse("source,target,value\n" + rLinks);
 		
-		graphAux = [];
-		
 		  return {"nodes": aNodes,"links": aLinks};
 	}
 	
@@ -286,7 +284,7 @@
 	function getPeriod(yearMin, yearMax){
 		var i,j,k;
 		var result = [], counter = 0;
-		
+		auxGraph = [];
 		for(i = 0; i < data.length; i++){
 			counter = 0
 			if(data[i].release_date.split("-")[0] >= yearMin && data[i].release_date.split("-")[0] <= yearMax){
@@ -297,6 +295,7 @@
 							if(categories[j].name == data[i].genres[k] && counter == 0){
 								counter++;
 								result.push(data[i]);
+								auxGraph.push(data[i]);
 							}
 							
 						}
@@ -313,7 +312,7 @@
 	function click(min, max){
 		quantityPerGenre = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 		graphy = convertToGraph(createNodesAndLinks(getPeriod(min,max), auxNodes, auxLinks, auxGraph))
-		updateGraph();
+		updateGraph(graphy);
 		updateBarChart();
 	}
 	
@@ -325,14 +324,12 @@
 	var nodeElements = nodeGroup.selectAll("nodes")
 		.data(graphy.nodes);	
 	
-	function updateGraph(){
-		
-
+	function updateGraph(graph){
 		linkElements = linkGroup.selectAll("line")
-		.data(graphy.links);
+		.data(graph.links);
 		
 		nodeElements = nodeGroup.selectAll("circle")
-		.data(graphy.nodes);
+		.data(graph.nodes);
 		
 		linkElements.exit().transition()
 				  .attr("stroke-opacity", 0)
@@ -383,11 +380,11 @@
 		nodeElements = nodeEnter.merge(nodeElements);
 
 		simulation
-		  .nodes(graphy.nodes)
+		  .nodes(graph.nodes)
 		  .on("tick", ticked);
 
 		simulation.force("link")
-		  .links(graphy.links);
+		  .links(graph.links);
 
 		simulation.restart();
 		
@@ -852,7 +849,8 @@ svg.append("text")
 		.attr("x", 5)
 		.attr("dy", ".35em")
 		.style("text-anchor", "start");
-	
+		
+	var filteredData = [], verify = 0;
 	//Function that updates Bar Chart graph and yAxis
 function updateBarChart(){
 	
@@ -896,6 +894,29 @@ function updateBarChart(){
               .html((d));
        })
 		.on("mouseout", function(d){ tooltip.style("display", "none");})
+		.attr("fill", "#756bb1")
+		.on("click", function(d, i){
+			  if(d3.select(this).attr("fill") == "#756bb1"){
+				d3.select(this).attr("fill", "#cccbb1");
+				verify = verify + 1;
+				
+				 if(verify > 0){
+					filterGraph(i);
+				 }else{
+					updateGraph(graphy)
+				 }
+			  }else{
+				  d3.select(this).attr("fill", "#756bb1");
+				  verify = verify -1;
+				 
+				 if(verify > 0){
+					filterGraph(i);
+				 }else{
+					updateGraph(graphy)
+				 }
+			  }
+			  
+		  })
           .attr("class", "bar")
 		  .attr('y', height2) //Inicialize the y to show effect of growing bars after merging them
 		  .attr("x", 
@@ -914,8 +935,8 @@ function updateBarChart(){
 		  .transition()
           .attr("width", xScale.bandwidth())
           .attr("y", function(d) { return y(d); })
-          .attr("height", function(d) { return 300 - y(d); }); //<- Shows message error, but still works. Stops if replaced by the constant 300, ps: height2 = 300
-  
+          .attr("height", function(d) { return 300 - y(d); }) //<- Shows message error, but still works. Stops if replaced by the constant 300, ps: height2 = 300
+		  ;
   //Updating yAxis range
 	var yAxisBar	= svg2.selectAll(".y")
             .data(["dummy"]);
@@ -925,4 +946,297 @@ function updateBarChart(){
 
         yAxisBar.merge(newY).transition().call(yAxisCall);		
 }
-	
+	function filterGraph(i){
+		filteredData = [];
+		var aux, k = 0, l = 0, aux = 0;
+		 d3.selectAll(".bar").each(function(d,i){
+			 for(j = 0; j < auxGraph.length; j++){
+				if (d3.select(this).attr("fill") == "#cccbb1"){
+					if(i == 0){
+						for(k = 0; k < auxGraph[j].genres.length; k++){
+							if(auxGraph[j].genres[k] == "Action"){
+								aux = 0;
+								for(l = 0; l < filteredData.length; l++){
+								
+									if(filteredData[l] == auxGraph[j]){aux = 1; break;}else{}
+									
+								}
+								if(aux == 0){
+									filteredData.push(auxGraph[j]);
+								}
+							}
+						}
+						
+					}else if(i == 1){
+						for(k = 0; k < auxGraph[j].genres.length; k++){
+							if(auxGraph[j].genres[k] == "Adventure"){
+								aux = 0;
+								for(l = 0; l < filteredData.length; l++){
+								
+									if(filteredData[l] == auxGraph[j]){aux = 1; break;}else{}
+									
+								}
+								if(aux == 0){
+									filteredData.push(auxGraph[j]);
+								}
+							}
+						}
+					}else if(i == 2){
+						for(k = 0; k < auxGraph[j].genres.length; k++){
+							if(auxGraph[j].genres[k] == "Animation"){
+								aux = 0;
+								for(l = 0; l < filteredData.length; l++){
+								
+									if(filteredData[l] == auxGraph[j]){aux = 1; break;}else{}
+									
+								}
+								if(aux == 0){
+									filteredData.push(auxGraph[j]);
+								}
+							}
+						}
+					}else if(i == 3){
+						for(k = 0; k < auxGraph[j].genres.length; k++){
+							if(auxGraph[j].genres[k] == "Comedy"){
+								aux = 0;
+								for(l = 0; l < filteredData.length; l++){
+								
+									if(filteredData[l] == auxGraph[j]){aux = 1; break;}else{}
+									
+								}
+								if(aux == 0){
+									filteredData.push(auxGraph[j]);
+								}
+							}
+						}
+					}else if(i == 4){
+						for(k = 0; k< auxGraph[j].genres.length; k++){
+							if(auxGraph[j].genres[k] == "Crime"){
+								aux = 0;
+								for(l = 0; l < filteredData.length; l++){
+								
+									if(filteredData[l] == auxGraph[j]){aux = 1; break;}else{}
+									
+								}
+								if(aux == 0){
+									filteredData.push(auxGraph[j]);
+								}
+							}
+						}
+					}else if(i == 5){
+						for(k = 0; k< auxGraph[j].genres.length; k++){
+							if(auxGraph[j].genres[k] == "Documentary"){
+								aux = 0;
+								for(l = 0; l < filteredData.length; l++){
+								
+									if(filteredData[l] == auxGraph[j]){aux = 1; break;}else{}
+									
+								}
+								if(aux == 0){
+									filteredData.push(auxGraph[j]);
+								}
+							}
+						}
+					}else if(i == 6){
+						for(k = 0; k< auxGraph[j].genres.length; k++){
+							if(auxGraph[j].genres[k] == "Drama"){
+								aux = 0;
+								for(l = 0; l < filteredData.length; l++){
+								
+									if(filteredData[l] == auxGraph[j]){aux = 1; break;}else{}
+									
+								}
+								if(aux == 0){
+									filteredData.push(auxGraph[j]);
+								}
+							}
+						}
+					}else if(i == 7){
+						for(k = 0; k< auxGraph[j].genres.length; k++){
+							if(auxGraph[j].genres[k] == "Family"){
+								aux = 0;
+								for(l = 0; l < filteredData.length; l++){
+								
+									if(filteredData[l] == auxGraph[j]){aux = 1; break;}else{}
+									
+								}
+								if(aux == 0){
+									filteredData.push(auxGraph[j]);
+								}
+							}
+						}
+					}else if(i == 8){
+						for(k = 0; k< auxGraph[j].genres.length; k++){
+							if(auxGraph[j].genres[k] == "Fantasy"){
+								aux = 0;
+								for(l = 0; l < filteredData.length; l++){
+								
+									if(filteredData[l] == auxGraph[j]){aux = 1; break;}else{}
+									
+								}
+								if(aux == 0){
+									filteredData.push(auxGraph[j]);
+								}
+							}
+						}
+					}else if(i == 9){
+						for(k = 0; k< auxGraph[j].genres.length; k++){
+							if(auxGraph[j].genres[k] == "Foreign"){
+								aux = 0;
+								for(l = 0; l < filteredData.length; l++){
+								
+									if(filteredData[l] == auxGraph[j]){aux = 1; break;}else{}
+									
+								}
+								if(aux == 0){
+									filteredData.push(auxGraph[j]);
+								}
+							}
+						}
+					}else if(i == 10){
+						for(k = 0; k< auxGraph[j].genres.length; k++){
+							if(auxGraph[j].genres[k] == "History"){
+								aux = 0;
+								for(l = 0; l < filteredData.length; l++){
+								
+									if(filteredData[l] == auxGraph[j]){aux = 1; break;}else{}
+									
+								}
+								if(aux == 0){
+									filteredData.push(auxGraph[j]);
+								}
+							}
+						}
+					}else if(i == 11){
+						for(k = 0; k< auxGraph[j].genres.length; k++){
+							if(auxGraph[j].genres[k] == "Horror"){
+								aux = 0;
+								for(l = 0; l < filteredData.length; l++){
+								
+									if(filteredData[l] == auxGraph[j]){aux = 1; break;}else{}
+									
+								}
+								if(aux == 0){
+									filteredData.push(auxGraph[j]);
+								}
+							}
+						}
+					}else if(i == 12){
+						for(k = 0; k< auxGraph[j].genres.length; k++){
+							if(auxGraph[j].genres[k] == "Music"){
+								aux = 0;
+								for(l = 0; l < filteredData.length; l++){
+								
+									if(filteredData[l] == auxGraph[j]){aux = 1; break;}else{}
+									
+								}
+								if(aux == 0){
+									filteredData.push(auxGraph[j]);
+								}
+							}
+						}
+					}else if(i == 13){
+						for(k = 0; k< auxGraph[j].genres.length; k++){
+							if(auxGraph[j].genres[k] == "Mystery"){
+								aux = 0;
+								for(l = 0; l < filteredData.length; l++){
+								
+									if(filteredData[l] == auxGraph[j]){aux = 1; break;}else{}
+									
+								}
+								if(aux == 0){
+									filteredData.push(auxGraph[j]);
+								}
+							}
+						}
+					}else if(i == 14){
+						for(k = 0; k< auxGraph[j].genres.length; k++){
+							if(auxGraph[j].genres[k] == "Romance"){
+								aux = 0;
+								for(l = 0; l < filteredData.length; l++){
+								
+									if(filteredData[l] == auxGraph[j]){aux = 1; break;}else{}
+									
+								}
+								if(aux == 0){
+									filteredData.push(auxGraph[j]);
+								}
+							}
+						}
+					}else if(i == 15){
+						for(k = 0; k< auxGraph[j].genres.length; k++){
+							if(auxGraph[j].genres[k] == "Science Fiction"){
+								aux = 0;
+								for(l = 0; l < filteredData.length; l++){
+								
+									if(filteredData[l] == auxGraph[j]){aux = 1; break;}else{}
+									
+								}
+								if(aux == 0){
+									filteredData.push(auxGraph[j]);
+								}
+							}
+						}
+					}else if(i == 16){
+						for(k = 0; k< auxGraph[j].genres.length; k++){
+							if(auxGraph[j].genres[k] == "TV Movie"){
+								aux = 0;
+								for(l = 0; l < filteredData.length; l++){
+								
+									if(filteredData[l] == auxGraph[j]){aux = 1; break;}else{}
+									
+								}
+								if(aux == 0){
+									filteredData.push(auxGraph[j]);
+								}
+							}
+						}
+					}else if(i == 17){
+						for(k = 0; k < auxGraph[j].genres.length; k++){
+							if(auxGraph[j].genres[k] == "Thriller"){
+								aux = 0;
+								for(l = 0; l < filteredData.length; l++){
+								
+									if(filteredData[l] == auxGraph[j]){aux = 1; break;}else{}
+									
+								}
+								if(aux == 0){
+									filteredData.push(auxGraph[j]);
+								}
+							}
+						}
+					}else if(i == 18){
+						for(k = 0; k < auxGraph[j].genres.length; k++){
+							if(auxGraph[j].genres[k] == "War"){
+								aux = 0;
+								for(l = 0; l < filteredData.length; l++){
+								
+									if(filteredData[l] == auxGraph[j]){aux = 1; break;}else{}
+									
+								}
+								if(aux == 0){
+									filteredData.push(auxGraph[j]);
+								}
+							}
+						}
+					}else if(i == 19){
+						for(k = 0; k < auxGraph[j].genres.length; k++){
+							if(auxGraph[j].genres[k] == "Western"){
+								aux = 0;
+								for(l = 0; l < filteredData.length; l++){
+								
+									if(filteredData[l] == auxGraph[j]){aux = 1; break;}else{}
+									
+								}
+								if(aux == 0){
+									filteredData.push(auxGraph[j]);
+								}
+							}
+						}
+					}
+				}
+			 }
+		 });
+		 var g = convertToGraph(createNodesAndLinks(filteredData, auxNodes, auxLinks, auxGraph));
+	updateGraph(g);
+	}
