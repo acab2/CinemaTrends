@@ -442,7 +442,7 @@
 	//Getting and fixing original data from movies from https://www.kaggle.com/tmdb/tmdb-movie-metadata
 	if(start == 0){
 		start = 1;
-		d3.csv("http://localhost:8000/tmdb_5000_movies.csv", function(error2, dataset2) {
+		d3.csv("tmdb_5000_movies.csv", function(error2, dataset2) {
 			if (error2) throw error;
 			movies = dataset2;
 			
@@ -596,7 +596,7 @@
 		});
 		
 		//Getting and treating original data from cast and crew from https://www.kaggle.com/tmdb/tmdb-movie-metadata
-		d3.csv("http://localhost:8000/tmdb_5000_credits.csv", function(error, dataset) {
+		d3.csv("tmdb_5000_credits.csv", function(error, dataset) {
 			if (error) throw error;
 				
 			var i;
